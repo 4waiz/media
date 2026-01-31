@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AirBonsai Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0b1016;
+        --panel: rgba(12, 16, 24, 0.8);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eaf2ff;
+        --muted: #9fb0c3;
+        --accent: #7cf9c0;
+        --accent-2: #f7b0ff;
+        --danger: #ff8f8f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        background: radial-gradient(1200px 600px at 20% 10%, #141f2f 0%, #0b1016 55%, #05070a 100%);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      #app {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .hud {
+        position: absolute;
+        top: 18px;
+        left: 18px;
+        padding: 14px 16px;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        backdrop-filter: blur(14px);
+        min-width: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .hud h1 {
+        margin: 0;
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hud .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .hud .value {
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .controls {
+        position: absolute;
+        bottom: 18px;
+        left: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background: rgba(18, 24, 34, 0.9);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      button:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: rgba(18, 24, 34, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 13px;
+      }
+
+      .toggle input {
+        accent-color: var(--accent);
+      }
+
+      .status-pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(124, 249, 192, 0.15);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .status-pill.off {
+        background: rgba(255, 143, 143, 0.15);
+        color: var(--danger);
+      }
+
+      .bottom-right {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+      }
+
+      .legend {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--muted);
+        max-width: 270px;
+      }
+
+      .legend strong {
+        color: var(--text);
+      }
+
+      #video {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <video id="video" playsinline></video>
+      <div class="hud" id="hud">
+        <h1>AirBonsai Studio</h1>
+        <div class="row"><span>Mode</span><span class="value" id="modeLabel">Grow</span></div>
+        <div class="row"><span>Palette</span><span class="value" id="paletteLabel">Classic</span></div>
+        <div class="row"><span>Brush</span><span class="value" id="brushLabel">2</span></div>
+        <div class="row"><span>Voxels</span><span class="value" id="voxelLabel">0</span></div>
+        <div class="row"><span>Tracking</span><span class="status-pill off" id="trackingLabel">No Hand</span></div>
+      </div>
+
+      <div class="controls" id="controls">
+        <button id="undoBtn">Undo</button>
+        <button id="redoBtn">Redo</button>
+        <button id="saveBtn">Save JSON</button>
+        <button id="loadBtn">Load JSON</button>
+        <button id="exportBtn">Export OBJ</button>
+        <label class="toggle"><input type="checkbox" id="mouseToggle" /> Mouse mode</label>
+      </div>
+
+      <div class="bottom-right">
+        <div class="legend">
+          <strong>Gestures</strong><br />
+          Right hand: Pinch = Grow/Stamp, Open palm = Leaf paint, Fist = Erase<br />
+          Left hand: Thumb up = Palette, V sign = Symmetry, Pinch + vertical = Brush size<br />
+          Two-hand pinch = Camera orbit/zoom
+        </div>
+        <div class="legend">
+          <strong>Keys</strong><br />
+          1 Grow · 2 Leaf · 3 Erase · Z Undo · Y Redo · S Save · L Load · E Export
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
