@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 function keyFor(x, y, z) {
   return `${x},${y},${z}`;
@@ -106,12 +106,20 @@ export class VoxelGrid {
   setVoxel(x, y, z, voxel, history) {
     const key = keyFor(x, y, z);
     const existing = this.grid.get(key);
+    const normalized = {
+      x,
+      y,
+      z,
+      color: voxel.color ?? 0xffffff,
+      type: voxel.type ?? 'wood'
+    };
+
     if (existing) {
-      if (existing.color !== voxel.color || existing.type !== voxel.type) {
-        this.grid.set(key, { ...voxel, x, y, z });
+      if (existing.color !== normalized.color || existing.type !== normalized.type) {
+        this.grid.set(key, normalized);
         const index = this.keyToIndex.get(key);
         if (index !== undefined) {
-          this.tempColor.setHex(voxel.color);
+          this.tempColor.setHex(normalized.color);
           this.mesh.setColorAt(index, this.tempColor);
           this.mesh.instanceColor.needsUpdate = true;
         }
@@ -127,11 +135,11 @@ export class VoxelGrid {
     const index = this.count;
     this.keyToIndex.set(key, index);
     this.indexToKey[index] = key;
-    this.grid.set(key, { ...voxel, x, y, z });
+    this.grid.set(key, normalized);
 
     this.tempMatrix.makeTranslation(x, y, z);
     this.mesh.setMatrixAt(index, this.tempMatrix);
-    this.tempColor.setHex(voxel.color);
+    this.tempColor.setHex(normalized.color);
     this.mesh.setColorAt(index, this.tempColor);
 
     this.count += 1;
@@ -139,7 +147,7 @@ export class VoxelGrid {
     this.mesh.instanceMatrix.needsUpdate = true;
     this.mesh.instanceColor.needsUpdate = true;
 
-    if (history) history.recordAdd({ ...voxel, x, y, z });
+    if (history) history.recordAdd(normalized);
   }
 
   removeVoxel(x, y, z, history) {
